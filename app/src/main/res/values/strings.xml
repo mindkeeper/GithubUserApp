@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">GithubUserApp</string>
+    <string name="username">username</string>
+    <string name="nama_pemilik_akun">Real Name</string>
+    <string name="detail_username">detail: username</string>
+    <string name="detail_real_name">Detail: Real Name</string>
+    <string name="follower">Follower</string>
+    <string name="following">Following</string>
+    <string name="follower_count">follow</string>
+    <string name="following_count">following</string>
+    <string name="more_details">More Details</string>
+    <string name="company">Company</string>
+    <string name="content_company">content company</string>
+    <string name="location">Location</string>
+    <string name="repository">repository</string>
+    <string name="share">Share</string>
+    <string name="image">image</string>
+    <string name="search">search</string>
+    <string name="search_hint">Type Username</string>
+</resources>
