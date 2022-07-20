@@ -10,17 +10,19 @@ import retrofit2.http.Query
 
 interface ApiService {
 
+
+
+    @GET("users")
+    fun getListUsers():Call<List<ListUsersResponseItem>>
+
     @Headers(
         "Accept: application/vnd.github.v3+json",
         "Authorization: token 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"
     )
 
-    @GET("user")
-    fun getListUsers():Call<List<ListUsersResponseItem>>
-
-    @GET("search/{users}")
+    @GET("search/users")
     fun getSearchUser(
-        @Query("query") username : String
+        @Query("q") username : String
     ): Call<SearchUserResponse>
 
     @GET("users/{username}")

@@ -89,7 +89,6 @@ class MainActivity : AppCompatActivity() {
         binding.rvUserList.layoutManager = LinearLayoutManager(this)
         binding.rvUserList.adapter = listUserAdapter
 
-        Log.d("Called", "True")
     }
 
 

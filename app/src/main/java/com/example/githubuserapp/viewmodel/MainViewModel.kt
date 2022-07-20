@@ -15,8 +15,6 @@ class MainViewModel : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading : LiveData<Boolean> get()= _isLoading
 
-//    private val _getAllUser = MutableLiveData<List<>>()
-//    val getAlluser : LiveData<List<ListUsersResponseItem>> get() = _getAllUser
     private val _searchedUserDetails = MutableLiveData<List<DetailUserResponse>>()
     val searchedUserDetail : LiveData<List<DetailUserResponse>> get() = _searchedUserDetails
 
@@ -26,6 +24,7 @@ class MainViewModel : ViewModel() {
     var errorMessage : String = ""
         private set
 
+    
     fun getAllUsers(){
         _isLoading.value = true
         _isError.value = false
@@ -51,6 +50,7 @@ class MainViewModel : ViewModel() {
                 }else{
                     Log.d(TAG, "onFailure getall user : ${response.message()}")
                 }
+
             }
         })
     }
@@ -167,7 +167,6 @@ class MainViewModel : ViewModel() {
                         }else{
                             Log.d(TAG, "onFailure : ${response.code()}")
                         }
-
                     }
                 }
             })
