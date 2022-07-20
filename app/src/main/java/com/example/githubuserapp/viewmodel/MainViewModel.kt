@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.githubuserapp.apiresponse.*
+import com.example.githubuserapp.event.Event
 import com.example.githubuserapp.network.ApiConfig
 import retrofit2.Call
 import retrofit2.Callback
@@ -18,8 +19,13 @@ class MainViewModel : ViewModel() {
     private val _searchedUserDetails = MutableLiveData<List<DetailUserResponse>>()
     val searchedUserDetail : LiveData<List<DetailUserResponse>> get() = _searchedUserDetails
 
+    private val _allusers = MutableLiveData<List<DetailUserResponse>>()
+    val allUsers: LiveData<List<DetailUserResponse>> get() = _allusers
+
     private val _isError = MutableLiveData<Boolean>()
     val isError : LiveData<Boolean> get() = _isError
+
+    var isSnackbarShown: Event<Boolean> = Event(false)
 
     var errorMessage : String = ""
         private set
@@ -31,6 +37,7 @@ class MainViewModel : ViewModel() {
 
         val client = ApiConfig.getApiService().getListUsers()
         client.enqueue(object : Callback<List<ListUsersResponseItem>>{
+
             override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
                 _isLoading.value = false
                 _isError.value = true
@@ -45,6 +52,7 @@ class MainViewModel : ViewModel() {
                 _isLoading.value = false
                 _isError.value = false
                 val responseBody = response.body()
+                Log.d(TAG, "success : $responseBody")
                 if (response.isSuccessful && responseBody != null){
                     getAllUsersDetails(responseBody)
                 }else{
@@ -64,6 +72,7 @@ class MainViewModel : ViewModel() {
         client.enqueue(object : Callback<SearchUserResponse>{
             override fun onFailure(call: Call<SearchUserResponse>, t: Throwable) {
                 _isLoading.value = false
+                _isError.value = true
                 Log.d(TAG, "onFailure getsearch user: ${t.message}")
                 t.printStackTrace()
             }
@@ -73,7 +82,9 @@ class MainViewModel : ViewModel() {
                 response: Response<SearchUserResponse>
             ) {
                 _isLoading.value = false
+                _isError.value = false
                 val responseBody = response.body()
+                Log.d(TAG, "success : $responseBody")
                 if (response.isSuccessful && responseBody != null){
                     getSearchedUserDetail(responseBody.items as List<ItemsItem>)
                 }else{
@@ -88,9 +99,9 @@ class MainViewModel : ViewModel() {
         _isLoading.value = false
         val listUserDetail = ArrayList<DetailUserResponse>()
         if (listItem.isEmpty()){
-            _isLoading.value = true
+            _isLoading.value = false
             errorMessage = NO_RESULT
-            _isError.value = false
+            _isError.value = true
             _searchedUserDetails.postValue(listUserDetail)
 
         }
@@ -98,6 +109,7 @@ class MainViewModel : ViewModel() {
         listItem.forEach{
             val client = ApiConfig.getApiService().getUserDetail(it.login!!)
             client.enqueue(object : Callback<DetailUserResponse>{
+
                 override fun onFailure(call: Call<DetailUserResponse>, t: Throwable) {
                     _isLoading.value = false
                     _isLoading.value = true
@@ -112,6 +124,7 @@ class MainViewModel : ViewModel() {
                     _isLoading.value = false
                     _isError.value = false
                     val responseBody = response.body()
+                    Log.d(TAG, "success : $responseBody")
                     if (response.isSuccessful && responseBody != null){
                         _isLoading.value = false
                         _isError.value = false
@@ -134,10 +147,10 @@ class MainViewModel : ViewModel() {
         _isLoading.value = false
         val listUserDetail = ArrayList<DetailUserResponse>()
         if (listUsers.isEmpty()){
-            _isLoading.value = true
+            _isLoading.value = false
             errorMessage = NO_RESULT
-            _isError.value = false
-            _searchedUserDetails.postValue(listUserDetail)
+            _isError.value = true
+            _allusers.postValue(listUserDetail)
 
         }
 
@@ -158,12 +171,13 @@ class MainViewModel : ViewModel() {
                     _isLoading.value = false
                     _isError.value = false
                     val responseBody = response.body()
+                    Log.d(TAG, "success : $responseBody")
                     if (response.isSuccessful && responseBody != null){
                         _isLoading.value = false
                         _isError.value = false
                         listUserDetail.add(responseBody)
                         if (listUserDetail.count() == listUsers.count()){
-                            _searchedUserDetails.postValue(listUserDetail)
+                            _allusers.postValue(listUserDetail)
                         }else{
                             Log.d(TAG, "onFailure : ${response.code()}")
                         }
@@ -171,6 +185,18 @@ class MainViewModel : ViewModel() {
                 }
             })
         }
+    }
+
+    private fun onError(inputMessage: String?) {
+        var message = inputMessage
+        message = if (message.isNullOrBlank() or message.isNullOrEmpty()) ApiConfig.error
+        else message
+
+        errorMessage = StringBuilder("ERROR: ")
+            .append("$message some data may not displayed properly").toString()
+
+        _isError.value = true
+        _isLoading.value = false
     }
 
     companion object{

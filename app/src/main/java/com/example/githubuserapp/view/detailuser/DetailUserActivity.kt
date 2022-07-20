@@ -5,16 +5,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
+import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.example.githubuserapp.R
 import com.example.githubuserapp.apiresponse.UserDetail
 import com.example.githubuserapp.databinding.ActivityDetailUserBinding
 import com.example.githubuserapp.viewmodel.DetailViewModel
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 
 class DetailUserActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailUserBinding
     val detailViewModel by viewModels<DetailViewModel>()
+    private lateinit var sectionPager: DetailPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,6 +27,30 @@ class DetailUserActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val user = intent.getParcelableExtra<UserDetail>(EXTRA_USER) as UserDetail
+        sectionPagerAdapter()
+
+        detailViewModel.isSnackbarShown.hasBeenHandled = false
+        detailViewModel.getUserFollower(user.login!!)
+        detailViewModel.getUserFollowing(user.login!!)
+        supportActionBar?.title = user.login
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return super.onSupportNavigateUp()
+    }
+    private fun sectionPagerAdapter() {
+        sectionPager = DetailPagerAdapter(this)
+        val viewPager : ViewPager2 = binding.viewPager
+        viewPager.adapter = sectionPager
+
+        val tabs : TabLayout = binding.tabs
+        TabLayoutMediator(tabs, viewPager){tab, position ->
+            tab.text = resources.getString(TAB_TITLES[position])
+
+        }.attach()
+        supportActionBar?.elevation = 0f
     }
 
     private fun dataBinding(user : UserDetail){

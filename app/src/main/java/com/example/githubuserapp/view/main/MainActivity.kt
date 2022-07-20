@@ -17,6 +17,7 @@ import com.example.githubuserapp.apiresponse.UserDetail
 import com.example.githubuserapp.databinding.ActivityMainBinding
 import com.example.githubuserapp.view.detailuser.DetailUserActivity
 import com.example.githubuserapp.viewmodel.MainViewModel
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,7 +29,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         subscribe()
-        mainViewModel.getAllUsers()
 
     }
 
@@ -60,6 +60,12 @@ class MainActivity : AppCompatActivity() {
         mainViewModel.isLoading.observe(this){
             showloading(it)
         }
+        mainViewModel.isError.observe(this){
+            if (it) showError()
+        }
+        mainViewModel.allUsers.observe(this){
+            showRecycleList(it)
+        }
 
         mainViewModel.searchedUserDetail.observe(this){
             showRecycleList(it)
@@ -87,12 +93,18 @@ class MainActivity : AppCompatActivity() {
             }
         })
         binding.rvUserList.layoutManager = LinearLayoutManager(this)
-        binding.rvUserList.adapter = listUserAdapter
+        binding.rvUserList.adapter =listUserAdapter
 
     }
 
 
     private fun showloading(isLoading : Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun showError() {
+        mainViewModel.isSnackbarShown.getContentIfNotHandled()?.let {
+            Snackbar.make(binding.root, mainViewModel.errorMessage, Snackbar.LENGTH_SHORT).show()
+        }
     }
 }

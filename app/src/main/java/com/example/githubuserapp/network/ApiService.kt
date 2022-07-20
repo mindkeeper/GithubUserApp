@@ -17,7 +17,7 @@ interface ApiService {
 
     @Headers(
         "Accept: application/vnd.github.v3+json",
-        "Authorization: token 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"
+        "Authorization: token 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"
     )
 
     @GET("search/users")
