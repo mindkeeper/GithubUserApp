@@ -4,7 +4,10 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.githubuserapp.apiresponse.*
+import com.example.githubuserapp.apiresponse.DetailUserResponse
+import com.example.githubuserapp.apiresponse.ItemsItem
+import com.example.githubuserapp.apiresponse.ListUsersResponseItem
+import com.example.githubuserapp.apiresponse.SearchUserResponse
 import com.example.githubuserapp.event.Event
 import com.example.githubuserapp.network.ApiConfig
 import retrofit2.Call
@@ -14,29 +17,29 @@ import retrofit2.Response
 class MainViewModel : ViewModel() {
 
     private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading : LiveData<Boolean> get()= _isLoading
+    val isLoading: LiveData<Boolean> get() = _isLoading
 
     private val _searchedUserDetails = MutableLiveData<List<DetailUserResponse>>()
-    val searchedUserDetail : LiveData<List<DetailUserResponse>> get() = _searchedUserDetails
+    val searchedUserDetail: LiveData<List<DetailUserResponse>> get() = _searchedUserDetails
 
-    private val _allusers = MutableLiveData<List<DetailUserResponse>>()
-    val allUsers: LiveData<List<DetailUserResponse>> get() = _allusers
+    private val _allUsers = MutableLiveData<List<DetailUserResponse>>()
+    val allUsers: LiveData<List<DetailUserResponse>> get() = _allUsers
 
     private val _isError = MutableLiveData<Boolean>()
-    val isError : LiveData<Boolean> get() = _isError
+    val isError: LiveData<Boolean> get() = _isError
 
-    var isSnackbarShown: Event<Boolean> = Event(false)
+    var isSnackBarShown: Event<Boolean> = Event(false)
 
-    var errorMessage : String = ""
+    var errorMessage: String = ""
         private set
 
-    
-    fun getAllUsers(){
+
+    fun getAllUsers() {
         _isLoading.value = true
         _isError.value = false
 
         val client = ApiConfig.getApiService().getListUsers()
-        client.enqueue(object : Callback<List<ListUsersResponseItem>>{
+        client.enqueue(object : Callback<List<ListUsersResponseItem>> {
 
             override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
                 _isLoading.value = false
@@ -53,9 +56,10 @@ class MainViewModel : ViewModel() {
                 _isError.value = false
                 val responseBody = response.body()
                 Log.d(TAG, "success : $responseBody")
-                if (response.isSuccessful && responseBody != null){
+                if (response.isSuccessful && responseBody != null) {
                     getAllUsersDetails(responseBody)
-                }else{
+                } else {
+                    onError(response.message())
                     Log.d(TAG, "onFailure getall user : ${response.message()}")
                 }
 
@@ -64,12 +68,11 @@ class MainViewModel : ViewModel() {
     }
 
 
-
-    fun getSearchedUsers(username : String){
+    fun getSearchedUsers(username: String) {
         _isLoading.value = true
         _isError.value = false
         val client = ApiConfig.getApiService().getSearchUser(username)
-        client.enqueue(object : Callback<SearchUserResponse>{
+        client.enqueue(object : Callback<SearchUserResponse> {
             override fun onFailure(call: Call<SearchUserResponse>, t: Throwable) {
                 _isLoading.value = false
                 _isError.value = true
@@ -85,9 +88,10 @@ class MainViewModel : ViewModel() {
                 _isError.value = false
                 val responseBody = response.body()
                 Log.d(TAG, "success : $responseBody")
-                if (response.isSuccessful && responseBody != null){
+                if (response.isSuccessful && responseBody != null) {
                     getSearchedUserDetail(responseBody.items as List<ItemsItem>)
-                }else{
+                } else {
+                    onError(response.message())
                     Log.d(TAG, "onFailure getsearchuser : ${response.message()}")
                 }
             }
@@ -98,7 +102,7 @@ class MainViewModel : ViewModel() {
         _isLoading.value = true
         _isLoading.value = false
         val listUserDetail = ArrayList<DetailUserResponse>()
-        if (listItem.isEmpty()){
+        if (listItem.isEmpty()) {
             _isLoading.value = false
             errorMessage = NO_RESULT
             _isError.value = true
@@ -106,9 +110,9 @@ class MainViewModel : ViewModel() {
 
         }
 
-        listItem.forEach{
+        listItem.forEach {
             val client = ApiConfig.getApiService().getUserDetail(it.login!!)
-            client.enqueue(object : Callback<DetailUserResponse>{
+            client.enqueue(object : Callback<DetailUserResponse> {
 
                 override fun onFailure(call: Call<DetailUserResponse>, t: Throwable) {
                     _isLoading.value = false
@@ -125,13 +129,13 @@ class MainViewModel : ViewModel() {
                     _isError.value = false
                     val responseBody = response.body()
                     Log.d(TAG, "success : $responseBody")
-                    if (response.isSuccessful && responseBody != null){
+                    if (response.isSuccessful && responseBody != null) {
                         _isLoading.value = false
                         _isError.value = false
                         listUserDetail.add(responseBody)
-                        if (listUserDetail.count() == listItem.count()){
+                        if (listUserDetail.count() == listItem.count()) {
                             _searchedUserDetails.postValue(listUserDetail)
-                        }else{
+                        } else {
                             Log.d(TAG, "onFailure get detailed search: ${response.code()}")
                         }
 
@@ -142,21 +146,21 @@ class MainViewModel : ViewModel() {
     }
 
 
-    private fun getAllUsersDetails(listUsers : List<ListUsersResponseItem>){
+    private fun getAllUsersDetails(listUsers: List<ListUsersResponseItem>) {
         _isLoading.value = true
         _isLoading.value = false
         val listUserDetail = ArrayList<DetailUserResponse>()
-        if (listUsers.isEmpty()){
+        if (listUsers.isEmpty()) {
             _isLoading.value = false
             errorMessage = NO_RESULT
             _isError.value = true
-            _allusers.postValue(listUserDetail)
+            _allUsers.postValue(listUserDetail)
 
         }
 
-        listUsers.forEach{
+        listUsers.forEach {
             val client = ApiConfig.getApiService().getUserDetail(it.login!!)
-            client.enqueue(object : Callback<DetailUserResponse>{
+            client.enqueue(object : Callback<DetailUserResponse> {
                 override fun onFailure(call: Call<DetailUserResponse>, t: Throwable) {
                     _isLoading.value = false
                     _isLoading.value = true
@@ -172,13 +176,14 @@ class MainViewModel : ViewModel() {
                     _isError.value = false
                     val responseBody = response.body()
                     Log.d(TAG, "success : $responseBody")
-                    if (response.isSuccessful && responseBody != null){
+                    if (response.isSuccessful && responseBody != null) {
                         _isLoading.value = false
                         _isError.value = false
                         listUserDetail.add(responseBody)
-                        if (listUserDetail.count() == listUsers.count()){
-                            _allusers.postValue(listUserDetail)
-                        }else{
+                        if (listUserDetail.count() == listUsers.count()) {
+                            _allUsers.postValue(listUserDetail)
+                        } else {
+                    onError(response.message())
                             Log.d(TAG, "onFailure : ${response.code()}")
                         }
                     }
@@ -199,7 +204,7 @@ class MainViewModel : ViewModel() {
         _isLoading.value = false
     }
 
-    companion object{
+    companion object {
         private const val TAG = "MainViewModel"
         private const val NO_RESULT = "No Result"
     }

@@ -3,12 +3,11 @@ package com.example.githubuserapp.view.main
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.githubuserapp.R
@@ -28,6 +27,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.emptyText.visibility = View.GONE
         subscribe()
 
     }
@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.queryHint = resources.getString(R.string.search_hint)
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let {
                     mainViewModel.getSearchedUsers(it)
@@ -56,54 +56,61 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun subscribe(){
-        mainViewModel.isLoading.observe(this){
-            showloading(it)
+    private fun subscribe() {
+        mainViewModel.isLoading.observe(this) {
+            showLoading(it)
         }
-        mainViewModel.isError.observe(this){
-            if (it) showError()
+        mainViewModel.isError.observe(this) {
+            if (it) {
+                binding.emptyText.visibility = View.VISIBLE
+                showError()
+            }
         }
-        mainViewModel.allUsers.observe(this){
+        mainViewModel.allUsers.observe(this) {
             showRecycleList(it)
         }
 
-        mainViewModel.searchedUserDetail.observe(this){
+        mainViewModel.searchedUserDetail.observe(this) {
             showRecycleList(it)
         }
+        mainViewModel.getAllUsers()
     }
 
     private fun showRecycleList(response: List<DetailUserResponse>) {
-
-        val listUserAdapter = ListUserAdapter(response)
-        listUserAdapter.setOnItemClickCallback(object : ListUserAdapter.OnItemClickCallback{
-            override fun onItemClick(user: DetailUserResponse) {
-                val userDetails = UserDetail().apply {
-                    name = user.name
-                    login = user.login
-                    followers = user.followers
-                    following = user.following
-                    repository = user.reposUrl
-                    company = user.company
-                    avatarUrl = user.avatarUrl
-                    location = user.location
+        if (response.isNotEmpty()) {
+            binding.emptyText.visibility = View.GONE
+            val listUserAdapter = ListUserAdapter(response)
+            listUserAdapter.setOnItemClickCallback(object : ListUserAdapter.OnItemClickCallback {
+                override fun onItemClick(user: DetailUserResponse) {
+                    val userDetails = UserDetail().apply {
+                        name = user.name
+                        login = user.login
+                        followers = user.followers
+                        following = user.following
+                        repository = user.reposUrl
+                        company = user.company
+                        avatarUrl = user.avatarUrl
+                        location = user.location
+                    }
+                    val detailIntent = Intent(this@MainActivity, DetailUserActivity::class.java)
+                    detailIntent.putExtra(DetailUserActivity.EXTRA_USER, userDetails)
+                    startActivity(detailIntent)
                 }
-                val detailIntent = Intent(this@MainActivity, DetailUserActivity::class.java)
-                detailIntent.putExtra(DetailUserActivity.EXTRA_USER, userDetails)
-                startActivity(detailIntent)
-            }
-        })
-        binding.rvUserList.layoutManager = LinearLayoutManager(this)
-        binding.rvUserList.adapter =listUserAdapter
-
+            })
+            binding.rvUserList.layoutManager = LinearLayoutManager(this)
+            binding.rvUserList.adapter = listUserAdapter
+        } else {
+            binding.emptyText.visibility = View.VISIBLE
+        }
     }
 
 
-    private fun showloading(isLoading : Boolean) {
+    private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     private fun showError() {
-        mainViewModel.isSnackbarShown.getContentIfNotHandled()?.let {
+        mainViewModel.isSnackBarShown.getContentIfNotHandled()?.let {
             Snackbar.make(binding.root, mainViewModel.errorMessage, Snackbar.LENGTH_SHORT).show()
         }
     }
