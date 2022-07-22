@@ -13,14 +13,14 @@ class DetailPagerAdapter(activity: AppCompatActivity): FragmentStateAdapter(acti
     override fun createFragment(position: Int): Fragment {
         fragment = FollowListFragment()
         when(position){
-            1 -> DetailPagerAdapterState.FOLLOWER
-            2 -> DetailPagerAdapterState.FOLLOWING
+            0 -> DetailPagerAdapterState.FOLLOWER_PAGE
+            1 -> DetailPagerAdapterState.FOLLOWING_PAGE
         }
         return fragment
     }
 }
 
 enum class DetailPagerAdapterState{
-    FOLLOWING,
-    FOLLOWER
+    FOLLOWING_PAGE,
+    FOLLOWER_PAGE
 }

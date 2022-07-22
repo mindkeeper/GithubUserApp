@@ -4,10 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.githubuserapp.apiresponse.DetailUserResponse
-import com.example.githubuserapp.apiresponse.ItemsItem
-import com.example.githubuserapp.apiresponse.ListUsersResponseItem
-import com.example.githubuserapp.apiresponse.SearchUserResponse
+import com.example.githubuserapp.apiresponse.*
 import com.example.githubuserapp.event.Event
 import com.example.githubuserapp.network.ApiConfig
 import retrofit2.Call
@@ -22,8 +19,8 @@ class MainViewModel : ViewModel() {
     private val _searchedUserDetails = MutableLiveData<List<DetailUserResponse>>()
     val searchedUserDetail: LiveData<List<DetailUserResponse>> get() = _searchedUserDetails
 
-    private val _allUsers = MutableLiveData<List<DetailUserResponse>>()
-    val allUsers: LiveData<List<DetailUserResponse>> get() = _allUsers
+    private val _allUsers = MutableLiveData<List<ListUsersResponseItem>>()
+    val allUsers: LiveData<List<ListUsersResponseItem>> get() = _allUsers
 
     private val _isError = MutableLiveData<Boolean>()
     val isError: LiveData<Boolean> get() = _isError
@@ -34,49 +31,14 @@ class MainViewModel : ViewModel() {
         private set
 
 
-    fun getAllUsers() {
-        _isLoading.value = true
+    fun getSearchedUsers(username : String){
         _isError.value = false
-
-        val client = ApiConfig.getApiService().getListUsers()
-        client.enqueue(object : Callback<List<ListUsersResponseItem>> {
-
-            override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
-                _isLoading.value = false
-                _isError.value = true
-                Log.d(TAG, "onFailure getalluser : ${t.message}")
-                t.printStackTrace()
-            }
-
-            override fun onResponse(
-                call: Call<List<ListUsersResponseItem>>,
-                response: Response<List<ListUsersResponseItem>>
-            ) {
-                _isLoading.value = false
-                _isError.value = false
-                val responseBody = response.body()
-                Log.d(TAG, "success : $responseBody")
-                if (response.isSuccessful && responseBody != null) {
-                    getAllUsersDetails(responseBody)
-                } else {
-                    onError(response.message())
-                    Log.d(TAG, "onFailure getall user : ${response.message()}")
-                }
-
-            }
-        })
-    }
-
-
-    fun getSearchedUsers(username: String) {
         _isLoading.value = true
-        _isError.value = false
+
         val client = ApiConfig.getApiService().getSearchUser(username)
-        client.enqueue(object : Callback<SearchUserResponse> {
+        client.enqueue(object : Callback<SearchUserResponse>{
             override fun onFailure(call: Call<SearchUserResponse>, t: Throwable) {
-                _isLoading.value = false
-                _isError.value = true
-                Log.d(TAG, "onFailure getsearch user: ${t.message}")
+                onError(t.message)
                 t.printStackTrace()
             }
 
@@ -84,112 +46,42 @@ class MainViewModel : ViewModel() {
                 call: Call<SearchUserResponse>,
                 response: Response<SearchUserResponse>
             ) {
-                _isLoading.value = false
-                _isError.value = false
                 val responseBody = response.body()
-                Log.d(TAG, "success : $responseBody")
-                if (response.isSuccessful && responseBody != null) {
-                    getSearchedUserDetail(responseBody.items as List<ItemsItem>)
-                } else {
-                    onError(response.message())
-                    Log.d(TAG, "onFailure getsearchuser : ${response.message()}")
+                if (response.isSuccessful && responseBody != null){
+
                 }
             }
         })
+
     }
-
-    private fun getSearchedUserDetail(listItem: List<ItemsItem>) {
+    fun getAllusers(){
         _isLoading.value = true
-        _isLoading.value = false
-        val listUserDetail = ArrayList<DetailUserResponse>()
-        if (listItem.isEmpty()) {
-            _isLoading.value = false
-            errorMessage = NO_RESULT
-            _isError.value = true
-            _searchedUserDetails.postValue(listUserDetail)
+        _isError.value = false
 
-        }
 
-        listItem.forEach {
-            val client = ApiConfig.getApiService().getUserDetail(it.login!!)
-            client.enqueue(object : Callback<DetailUserResponse> {
+        val client = ApiConfig.getApiService().getListUsers()
+        client.enqueue(object : Callback<List<ListUsersResponseItem>>{
+            override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
+                onError(t.message)
+                t.printStackTrace()
+            }
 
-                override fun onFailure(call: Call<DetailUserResponse>, t: Throwable) {
-                    _isLoading.value = false
-                    _isLoading.value = true
-                    Log.d(TAG, "onFaillure get detailed search : ${t.message}")
-                    t.printStackTrace()
+            override fun onResponse(
+                call: Call<List<ListUsersResponseItem>>,
+                response: Response<List<ListUsersResponseItem>>
+            ) {
+                _isError.value = false
+                _isLoading.value = false
+                val responseBody = response.body()
+                if (response.isSuccessful && responseBody != null){
+                    _allUsers.postValue(responseBody)
+                }else{
+
+                    onError(response.code().toString())
                 }
+            }
+        })
 
-                override fun onResponse(
-                    call: Call<DetailUserResponse>,
-                    response: Response<DetailUserResponse>
-                ) {
-                    _isLoading.value = false
-                    _isError.value = false
-                    val responseBody = response.body()
-                    Log.d(TAG, "success : $responseBody")
-                    if (response.isSuccessful && responseBody != null) {
-                        _isLoading.value = false
-                        _isError.value = false
-                        listUserDetail.add(responseBody)
-                        if (listUserDetail.count() == listItem.count()) {
-                            _searchedUserDetails.postValue(listUserDetail)
-                        } else {
-                            Log.d(TAG, "onFailure get detailed search: ${response.code()}")
-                        }
-
-                    }
-                }
-            })
-        }
-    }
-
-
-    private fun getAllUsersDetails(listUsers: List<ListUsersResponseItem>) {
-        _isLoading.value = true
-        _isLoading.value = false
-        val listUserDetail = ArrayList<DetailUserResponse>()
-        if (listUsers.isEmpty()) {
-            _isLoading.value = false
-            errorMessage = NO_RESULT
-            _isError.value = true
-            _allUsers.postValue(listUserDetail)
-
-        }
-
-        listUsers.forEach {
-            val client = ApiConfig.getApiService().getUserDetail(it.login!!)
-            client.enqueue(object : Callback<DetailUserResponse> {
-                override fun onFailure(call: Call<DetailUserResponse>, t: Throwable) {
-                    _isLoading.value = false
-                    _isLoading.value = true
-                    Log.d(TAG, "onFailure getallusertodetail : ${t.message}")
-                    t.printStackTrace()
-                }
-
-                override fun onResponse(
-                    call: Call<DetailUserResponse>,
-                    response: Response<DetailUserResponse>
-                ) {
-                    _isLoading.value = false
-                    _isError.value = false
-                    val responseBody = response.body()
-                    Log.d(TAG, "success : $responseBody")
-                    if (response.isSuccessful && responseBody != null) {
-                        _isLoading.value = false
-                        _isError.value = false
-                        listUserDetail.add(responseBody)
-                        if (listUserDetail.count() == listUsers.count()) {
-                            _allUsers.postValue(listUserDetail)
-                        } else {
-                    onError(response.message())
-                            Log.d(TAG, "onFailure : ${response.code()}")
-                        }
-                    }
-                }
-            })
-        }
     }
 
     private fun onError(inputMessage: String?) {
