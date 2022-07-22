@@ -30,28 +30,15 @@
             tools:src="@tools:sample/avatars" />
 
         <TextView
-            android:id="@+id/tv_real_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:text="@string/nama_pemilik_akun"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            card_view:layout_constraintEnd_toEndOf="parent"
-            card_view:layout_constraintStart_toEndOf="@id/item_photo"
-            card_view:layout_constraintTop_toTopOf="@id/item_photo" />
-
-        <TextView
             android:id="@+id/tv_username"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/username"
             card_view:layout_constraintBottom_toBottomOf="@+id/item_photo"
-            card_view:layout_constraintEnd_toEndOf="@+id/tv_real_name"
+            card_view:layout_constraintEnd_toEndOf="parent"
             card_view:layout_constraintHorizontal_bias="0.0"
-            card_view:layout_constraintStart_toStartOf="@+id/tv_real_name"
-            card_view:layout_constraintTop_toBottomOf="@+id/tv_real_name"
+            card_view:layout_constraintStart_toEndOf="@id/item_photo"
+            card_view:layout_constraintTop_toTopOf="@id/item_photo"
             card_view:layout_constraintVertical_bias="0.32" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

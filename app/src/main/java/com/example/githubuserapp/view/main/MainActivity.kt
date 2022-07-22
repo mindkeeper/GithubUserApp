@@ -4,6 +4,7 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.View
 import androidx.activity.viewModels
@@ -12,6 +13,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.githubuserapp.R
 import com.example.githubuserapp.apiresponse.DetailUserResponse
+import com.example.githubuserapp.apiresponse.ListUsersResponseItem
 import com.example.githubuserapp.apiresponse.UserDetail
 import com.example.githubuserapp.databinding.ActivityMainBinding
 import com.example.githubuserapp.view.detailuser.DetailUserActivity
@@ -43,7 +45,6 @@ class MainActivity : AppCompatActivity() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let {
-                    mainViewModel.getSearchedUsers(it)
                     searchView.clearFocus()
                 }
                 return true
@@ -66,42 +67,31 @@ class MainActivity : AppCompatActivity() {
                 showError()
             }
         }
-        mainViewModel.allUsers.observe(this) {
+
+        mainViewModel.allUsers.observe(this){
             showRecycleList(it)
         }
 
-        mainViewModel.searchedUserDetail.observe(this) {
-            showRecycleList(it)
-        }
-        mainViewModel.getAllUsers()
+        mainViewModel.getAllusers()
     }
 
-    private fun showRecycleList(response: List<DetailUserResponse>) {
-        if (response.isNotEmpty()) {
-            binding.emptyText.visibility = View.GONE
-            val listUserAdapter = ListUserAdapter(response)
-            listUserAdapter.setOnItemClickCallback(object : ListUserAdapter.OnItemClickCallback {
-                override fun onItemClick(user: DetailUserResponse) {
-                    val userDetails = UserDetail().apply {
-                        name = user.name
-                        login = user.login
-                        followers = user.followers
-                        following = user.following
-                        repository = user.reposUrl
-                        company = user.company
-                        avatarUrl = user.avatarUrl
-                        location = user.location
-                    }
-                    val detailIntent = Intent(this@MainActivity, DetailUserActivity::class.java)
-                    detailIntent.putExtra(DetailUserActivity.EXTRA_USER, userDetails)
-                    startActivity(detailIntent)
-                }
-            })
-            binding.rvUserList.layoutManager = LinearLayoutManager(this)
-            binding.rvUserList.adapter = listUserAdapter
-        } else {
-            binding.emptyText.visibility = View.VISIBLE
-        }
+    private fun showRecycleList(response: List<ListUsersResponseItem>) {
+
+        val listUserAdapter = ListUserAdapter(response)
+        listUserAdapter.setOnItemClickCallback(object : ListUserAdapter.OnItemClickCallback{
+            override fun onItemClick(user: String?) {
+                if (user == null){
+                    Log.d("MainActivity",  "null : $user")
+                }else Log.d("MainActivity",  user)
+
+                val detailIntent = Intent(this@MainActivity, DetailUserActivity::class.java)
+                detailIntent.putExtra("username", user.toString())
+                startActivity(detailIntent)
+            }
+        })
+        binding.rvUserList.layoutManager = LinearLayoutManager(this)
+        binding.rvUserList.adapter = listUserAdapter
+
     }
 
 

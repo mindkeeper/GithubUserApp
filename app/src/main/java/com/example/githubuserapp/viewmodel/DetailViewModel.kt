@@ -1,10 +1,12 @@
 package com.example.githubuserapp.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.githubuserapp.apiresponse.DetailUserResponse
 import com.example.githubuserapp.apiresponse.ItemsItem
+import com.example.githubuserapp.apiresponse.ListUsersResponseItem
 import com.example.githubuserapp.event.Event
 import com.example.githubuserapp.network.ApiConfig
 import retrofit2.Call
@@ -14,11 +16,14 @@ import java.lang.StringBuilder
 
 class DetailViewModel : ViewModel() {
 
-    private val _listFollower = MutableLiveData<List<DetailUserResponse>>()
-    val listFollower: LiveData<List<DetailUserResponse>>get() = _listFollower
+    private val _listFollower = MutableLiveData<List<ListUsersResponseItem>>()
+    val listFollower: LiveData<List<ListUsersResponseItem>>get() = _listFollower
 
-    private val _listFollowing = MutableLiveData<List<DetailUserResponse>>()
-    val listFollowing: LiveData<List<DetailUserResponse>>get() = _listFollowing
+    private val _listFollowing = MutableLiveData<List<ListUsersResponseItem>>()
+    val listFollowing: LiveData<List<ListUsersResponseItem>>get() = _listFollowing
+
+    private val _userDetail = MutableLiveData<DetailUserResponse>()
+    val userDetail : LiveData<DetailUserResponse> get() = _userDetail
 
     private var _isError = MutableLiveData<Boolean>()
     val isError: LiveData<Boolean> get() = _isError
@@ -34,26 +39,23 @@ class DetailViewModel : ViewModel() {
     fun getUserFollower(username : String){
         _isError.value = false
 
-        fun setFollower(follower : ArrayList<DetailUserResponse>){
-            _listFollower.postValue(follower)
-        }
 
         val client = ApiConfig.getApiService().getFollowers(username)
-        client.enqueue(object : Callback<List<ItemsItem>>{
-            override fun onFailure(call: Call<List<ItemsItem>>, t: Throwable) {
-                onError(t.message)
+        client.enqueue(object : Callback<List<ListUsersResponseItem>>{
+            override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
+                Log.d(TAG, "onFailure: ${t.message}")
                 t.printStackTrace()
             }
 
             override fun onResponse(
-                call: Call<List<ItemsItem>>,
-                response: Response<List<ItemsItem>>
+                call: Call<List<ListUsersResponseItem>>,
+                response: Response<List<ListUsersResponseItem>>
             ) {
                 val responseBody = response.body()
-                if (response.isSuccessful && responseBody!= null){
-                    getUserDetails(responseBody, ::setFollower)
+                if (response.isSuccessful && responseBody != null){
+                    _listFollower.postValue(responseBody)
                 }else{
-                    onError(response.code().toString())
+                    Log.d(TAG, "onResponse: ${response.code()}")
                 }
             }
         })
@@ -63,70 +65,49 @@ class DetailViewModel : ViewModel() {
     fun getUserFollowing(username : String){
         _isError.value = false
 
-        fun setFollowing(following : ArrayList<DetailUserResponse>){
-            _listFollower.postValue(following)
-        }
 
-        val client = ApiConfig.getApiService().getFollowing(username)
-        client.enqueue(object : Callback<List<ItemsItem>>{
-            override fun onFailure(call: Call<List<ItemsItem>>, t: Throwable) {
-                onError(t.message)
+        val client = ApiConfig.getApiService().getFollowers(username)
+        client.enqueue(object : Callback<List<ListUsersResponseItem>>{
+            override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
+                Log.d(TAG, "onFailure: ${t.message}")
                 t.printStackTrace()
             }
 
             override fun onResponse(
-                call: Call<List<ItemsItem>>,
-                response: Response<List<ItemsItem>>
+                call: Call<List<ListUsersResponseItem>>,
+                response: Response<List<ListUsersResponseItem>>
             ) {
                 val responseBody = response.body()
-                if (response.isSuccessful && responseBody!= null){
-                    getUserDetails(responseBody, ::setFollowing)
+                if (response.isSuccessful && responseBody != null){
+                    _listFollowing.postValue(responseBody)
                 }else{
-                    onError(response.code().toString())
+                    Log.d(TAG, "onResponse: ${response.code()}")
                 }
             }
         })
 
     }
 
-    private fun getUserDetails(listItem: List<ItemsItem>, setValue: (newValue: ArrayList<DetailUserResponse>)-> Unit){
-        _isLoading.value = true
-        _isError.value = false
+    fun getDetailUser(username: String){
+        val client = ApiConfig.getApiService().getUserDetail(username)
+        client.enqueue(object : Callback<DetailUserResponse>{
+            override fun onFailure(call: Call<DetailUserResponse>, t: Throwable) {
+                Log.d(TAG, "onFailure: ${t.message}")
+                t.printStackTrace()
+            }
 
-        val listUserDetails = ArrayList<DetailUserResponse>()
-        if (listItem.isEmpty()){
-            setValue(listUserDetails)
-            _isLoading.value = false
-        }
-
-        listItem.forEach{
-            val client = ApiConfig.getApiService().getUserDetail(it.login!!)
-            client.enqueue(object : Callback<DetailUserResponse>{
-                override fun onFailure(call: Call<DetailUserResponse>, t: Throwable) {
-                    _isLoading.value = false
-                    onError(t.message)
-                    t.printStackTrace()
+            override fun onResponse(
+                call: Call<DetailUserResponse>,
+                response: Response<DetailUserResponse>
+            ) {
+                val responseBody = response.body()
+                if (response.isSuccessful && responseBody != null){
+                    _userDetail.postValue(responseBody)
+                }else{
+                    Log.d(TAG, "onResponse : ${response.code()}")
                 }
-
-                override fun onResponse(
-                    call: Call<DetailUserResponse>,
-                    response: Response<DetailUserResponse>
-                ) {
-                    val responseBody = response.body()
-                    if (response.isSuccessful && responseBody != null){
-                        listUserDetails.add(responseBody)
-
-                        if (listUserDetails.count() >= listItem.count()){
-                            setValue(listUserDetails)
-                            _isLoading.value = false
-                        }
-                    }else{
-                        setValue(listUserDetails)
-                        onError(response.code().toString())
-                    }
-                }
-            })
-        }
+            }
+        })
     }
 
     private fun onError(e : String?){
@@ -140,5 +121,8 @@ class DetailViewModel : ViewModel() {
 
         _isLoading.value = false
         _isError.value = true
+    }
+    companion object{
+        const val TAG = "DetailViewModel"
     }
 }
