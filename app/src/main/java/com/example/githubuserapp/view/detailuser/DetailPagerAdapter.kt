@@ -3,24 +3,18 @@ package com.example.githubuserapp.view.detailuser
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.example.githubuserapp.R
 
-class DetailPagerAdapter(activity: AppCompatActivity): FragmentStateAdapter(activity){
-    var fragment = FollowListFragment()
+class DetailPagerAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
+    private val tab = listOf(
+        activity.getString(R.string.follower), activity.getString(R.string.following)
+    )
+
     override fun getItemCount(): Int {
-        return 2
+        return tab.size
     }
 
     override fun createFragment(position: Int): Fragment {
-        fragment = FollowListFragment()
-        when(position){
-            0 -> DetailPagerAdapterState.FOLLOWER_PAGE
-            1 -> DetailPagerAdapterState.FOLLOWING_PAGE
-        }
-        return fragment
+        return FollowListFragment.newInstance(tab[position])
     }
-}
-
-enum class DetailPagerAdapterState{
-    FOLLOWING_PAGE,
-    FOLLOWER_PAGE
 }
