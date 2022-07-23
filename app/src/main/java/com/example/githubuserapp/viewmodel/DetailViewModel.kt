@@ -39,7 +39,6 @@ class DetailViewModel : ViewModel() {
     fun getUserFollower(username : String){
         _isError.value = false
 
-
         val client = ApiConfig.getApiService().getFollowers(username)
         client.enqueue(object : Callback<List<ListUsersResponseItem>>{
             override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
@@ -65,8 +64,7 @@ class DetailViewModel : ViewModel() {
     fun getUserFollowing(username : String){
         _isError.value = false
 
-
-        val client = ApiConfig.getApiService().getFollowers(username)
+        val client = ApiConfig.getApiService().getFollowing(username)
         client.enqueue(object : Callback<List<ListUsersResponseItem>>{
             override fun onFailure(call: Call<List<ListUsersResponseItem>>, t: Throwable) {
                 Log.d(TAG, "onFailure: ${t.message}")
@@ -114,7 +112,7 @@ class DetailViewModel : ViewModel() {
         var message = e
         if (message.isNullOrBlank()||message.isNullOrEmpty()){
             message = ApiConfig.error
-        }else message
+        }
 
         errorMessage = StringBuilder("ERROR: ")
             .append("$message, data cannot be displayed").toString()
